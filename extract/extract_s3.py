@@ -39,9 +39,40 @@ def extract_names_data(bucket_name, folder, file_name: str = 'names.xlsx') -> pd
 
         try:
             df = pd.read_excel(s3_path, storage_options=storage_options, engine='openpyxl')
-            print(f"Loaded: {df}")
+            print(f"Loaded {file_name}:\n{df.head(5)}")
             return df
         except Exception as e:
             print(f"Skipping {s3_path}")
             print(f"{type(e).__name__}: {e}")
     return None
+
+def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> list[pd.DataFrame] | None:
+    contents, storage_options = get_folder_contents_s3(bucket_name, folder)
+    print(contents)
+    df_mapper = {'qs': 'quality', 'vayu': 'chat', 'statistic': 'phone'}
+    mapping = {'chat': None, 'phone': None, 'quality': None}
+
+    for obj in contents:
+        key = obj['Key']
+        print(key)
+        if not key.lower().endswith(('.csv', '.xlsx')):
+            continue
+
+        s3_path = f's3://{bucket_name}/{key}'
+
+        try:
+            if key.lower().endswith('.csv'):
+                df = pd.read_csv(s3_path, storage_options=storage_options)
+            else:
+                df = pd.read_excel(s3_path, storage_options=storage_options, engine='openpyxl')
+        except Exception as e:
+            print(f"Skipping {s3_path}")
+            print(f"{type(e).__name__}: {e}")
+
+        for df_name in df_mapper.keys():
+            if df_name in key.lower():
+                mapping[df_mapper[df_name]] = df
+                break
+
+    return [mapping['chat'], mapping['phone'], mapping['quality']]
+
