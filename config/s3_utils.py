@@ -4,6 +4,7 @@ from config.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 
 
 def get_s3_client_and_storage_options():
+    """Gets the S3 client and storage options needed to connect to AWS"""
     s3 = boto3.client(
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY_ID,
