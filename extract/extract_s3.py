@@ -47,6 +47,7 @@ def extract_names_data(bucket_name, folder, file_name: str = 'names.xlsx') -> pd
         except Exception as e:
             print(f"Skipping {s3_path}")
             print(f"{type(e).__name__}: {e}")
+
     return None
 
 def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> dict | None:
@@ -90,3 +91,25 @@ def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> dict | None:
 
     return mapping
 
+
+def extract_todo_tables(bucket_name: str, folder: str, sheet_name: str) -> dict | None:
+    contents, storage_options = get_folder_contents_s3(bucket_name, folder)
+    todo_dfs = {}
+
+    for obj in contents:
+        key = obj['Key']
+
+        if not key.lower().endswith('.xlsx'):
+            continue
+
+        s3_path = f's3://{bucket_name}/{key}'
+
+        try:
+            df = pd.read_excel(s3_path, sheet_name=sheet_name, storage_options=storage_options, engine='openpyxl')
+            new_key = key[key.index('/') + 1:]
+            todo_dfs[new_key] = df
+        except Exception as e:
+            print(f"Skipping {s3_path}")
+            print(f"{type(e).__name__}: {e}")
+
+    return todo_dfs
