@@ -129,14 +129,27 @@ def clean_dfs(dfs_dict: dict, names_df: pd.DataFrame) -> dict:
 
         if df_type == 'phone':
             df = df[df['user'] != 'Summe']
+
             df['accepted_calls_number'] = pd.to_numeric(
                 df["accepted_calls_number"],
                 errors="coerce",
             ).astype("Int64")
-
+            df = df.rename(columns={'accepted_calls_number': 'calls_count'})
         df = map_names(names_df, df, df_type)
         dataframes[df_type] = df
 
     return dataframes
 
+def clean_todo_dfs(todo_dfs: dict) -> dict:
+    """Cleaning todo dataframes"""
+    cleaned_todo_dfs = {}
 
+    if not todo_dfs:
+        raise Exception('No todo dataframes found!')
+
+    for key, df in todo_dfs.items():
+        df = col_headers_to_snake_case(df)
+        df = strip_str_cols(df)
+        cleaned_todo_dfs[key] = df
+
+    return cleaned_todo_dfs
