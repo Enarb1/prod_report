@@ -49,7 +49,7 @@ def extract_names_data(bucket_name, folder, file_name: str = 'names.xlsx') -> pd
             print(f"{type(e).__name__}: {e}")
     return None
 
-def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> list[pd.DataFrame] | None:
+def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> dict | None:
     """Extract the tables with the quality data, chat data and the phone data"""
 
     contents, storage_options = get_folder_contents_s3(bucket_name, folder)
@@ -88,5 +88,5 @@ def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> list[pd.DataFra
                 mapping[df_mapper[df_name]] = df
                 break
 
-    return [mapping['chat'], mapping['phone'], mapping['quality']]
+    return mapping
 
