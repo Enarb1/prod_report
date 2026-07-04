@@ -1,4 +1,5 @@
 from pathlib import PurePosixPath
+from typing import Any
 
 import pandas as pd
 import s3fs
@@ -10,7 +11,8 @@ from config.config import AWS_BUCKET_NAME, AWS_TEAM_FOLDER_PREFIX
 from config.s3_utils import get_s3_client_and_storage_options
 
 
-def get_folder_contents_s3(bucket_name: str, folder: str):
+def get_folder_contents_s3(bucket_name: str, folder: str) -> tuple[Any, Any]:
+    """Get folder contents from S3 bucket"""
     s3_client, storage_options = get_s3_client_and_storage_options()
 
     try:
@@ -26,6 +28,7 @@ def get_folder_contents_s3(bucket_name: str, folder: str):
     return contents, storage_options
 
 def extract_names_data(bucket_name, folder, file_name: str = 'names.xlsx') -> pd.DataFrame | None:
+    """Extract the names.xlsx file from S3 bucket"""
     contents, storage_options = get_folder_contents_s3(bucket_name, folder)
 
     for obj in contents:
@@ -47,6 +50,8 @@ def extract_names_data(bucket_name, folder, file_name: str = 'names.xlsx') -> pd
     return None
 
 def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> list[pd.DataFrame] | None:
+    """Extract the tables with the quality data, chat data and the phone data"""
+
     contents, storage_options = get_folder_contents_s3(bucket_name, folder)
     print(contents)
     df_mapper = {'qs': 'quality', 'vayu': 'chat', 'statistic': 'phone'}
@@ -62,7 +67,16 @@ def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> list[pd.DataFra
 
         try:
             if key.lower().endswith('.csv'):
-                df = pd.read_csv(s3_path, storage_options=storage_options)
+                if 'statistic' in key.lower():
+                    df = pd.read_csv(
+                        s3_path,
+                        storage_options=storage_options,
+                        sep=";",
+                        skiprows=17,
+                        encoding="utf-8-sig"
+                    )
+                else:
+                    df = pd.read_csv(s3_path, storage_options=storage_options)
             else:
                 df = pd.read_excel(s3_path, storage_options=storage_options, engine='openpyxl')
         except Exception as e:
