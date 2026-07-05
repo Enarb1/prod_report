@@ -62,6 +62,11 @@ def get_todo_aggregations(todo_dfs: dict[str, pd.DataFrame], names_df: pd.DataFr
     rows = []
 
     for file_name, df in todo_dfs.items():
+        name = names_mapper.get(file_name)
+        if name is None:
+            print(f'No name for {file_name} found!')
+            continue
+
         counts = df[['emails', 'to_do']].count()
         rows.append({
             'user': names_mapper.get(file_name, ''),
