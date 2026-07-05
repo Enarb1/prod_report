@@ -93,6 +93,7 @@ def extract_qs_chat_phone_data(bucket_name: str, folder: str) -> dict | None:
 
 
 def extract_todo_tables(bucket_name: str, folder: str, sheet_name: str) -> dict | None:
+    """Extract to do tables"""
     contents, storage_options = get_folder_contents_s3(bucket_name, folder)
     todo_dfs = {}
 
