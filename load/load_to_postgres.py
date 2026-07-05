@@ -5,6 +5,7 @@ from config.config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DATABASE
 
 
 def create_db_if_not_exists(db_name: str) -> None:
+    """Create DB if not exists"""
     db_params = {
         'user': DB_USER,
         'password': DB_PASSWORD,
@@ -29,6 +30,7 @@ def create_db_if_not_exists(db_name: str) -> None:
 
 
 def load_table_to_postgres(df: pd.DataFrame, table_name: str, if_exists: str = 'replace') -> None:
+    """Load Data to PostgreSQL"""
     try:
         connection_string = f'postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DATABASE}'
         engine = create_engine(connection_string)
