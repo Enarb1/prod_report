@@ -132,8 +132,7 @@ def add_user_table(
         todo_folder,
         names_file:str = 'names.xlsx'
 ) -> pd.DataFrame:
-    """
-    Create a ToDo_workbook for each agent who does not already have one.
+    """Create a ToDo_workbook for each agent who does not already have one.
 
     After creating each workbook, update the agent's todo_file value
     and save the updated names table."""
