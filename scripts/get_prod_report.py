@@ -1,3 +1,5 @@
+import pandera.errors
+
 from config.config import AWS_BUCKET_NAME, AWS_TEAM_FOLDER_PREFIX, AWS_RAW_EXPORT_FOLDER_PREFIX, AWS_TODO_FILES_FOLDER, \
     DATABASE
 from extract.extract_s3 import extract_names_data, extract_qs_chat_phone_data, extract_todo_tables
@@ -5,8 +7,9 @@ from load.load_to_postgres import create_db_if_not_exists, load_table_to_postgre
 from transform.aggregations import get_aggregations, get_todo_aggregations
 from transform.clean import clean_dfs, clean_todo_dfs
 from transform.merges import get_final_prod_df
+from validations.validate_prod_table import validate_prod_table
 
-
+# TODO add validation logic
 def get_prod_report():
 
     # Extract Data
@@ -32,9 +35,16 @@ def get_prod_report():
     final_productivity_table = get_final_prod_df(agg_data)
     print("Generated final productivity table")
 
+    # Validate Data
+    try:
+        validated_prod_df = validate_prod_table(final_productivity_table)
+        print("Validated productivity table")
+    except pandera.errors.SchemaErrors as e:
+        raise ValueError(f'Validation Error: {e}')
+
     # Load Data
     create_db_if_not_exists(DATABASE)
-    load_table_to_postgres(df=final_productivity_table, table_name='CW1_prod_table')
+    load_table_to_postgres(df=validated_prod_df, table_name='CW1_prod_table')
 
 
 if __name__ == "__main__":
