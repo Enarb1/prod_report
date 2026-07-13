@@ -1,6 +1,7 @@
 import pandas as pd
 import pandera as pa
 import pandera.errors
+import logging
 
 
 def prod_table_schema() -> pa.DataFrameSchema:
@@ -100,6 +101,7 @@ def get_schema(df_type: str) -> pa.DataFrameSchema:
 
     if schema_func is None:
         raise ValueError(f'Unknown DF type Error: {df_type}')
+    logging.info(f'Schema for df type {df_type} received.')
 
     return schema_func()
 
@@ -109,21 +111,22 @@ def validate_df(df: pd.DataFrame, df_type: str) -> pd.DataFrame:
     try:
         schema = get_schema(df_type)
         validated_df = schema.validate(df)
-        print(f"Df type {df_type} validated successfully")
-        return validated_df
+        logging.info(f'Df type {df_type} validated successfully')
 
     except pandera.errors.SchemaErrors as e:
         raise ValueError(f'Validation Error: {e}')
 
+    return validated_df
 
 def validate_dfs_dict(dfs: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
     """Validate multiple dataframes"""
+    logging.info(f'Validating {len(dfs)} dataframes.')
     validated_dfs = dict()
 
     for df_type, df in dfs.items():
         valid_df = validate_df(df, df_type)
         validated_dfs[df_type] = valid_df
-
+    logging.info(f'Validated {len(validated_dfs)} dataframes.')
     return validated_dfs
 
 

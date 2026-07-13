@@ -1,12 +1,12 @@
 import pathlib
-from io import BytesIO
-from pathlib import PurePosixPath
-
+import logging
 import pandas as pd
+
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
-
+from io import BytesIO
+from pathlib import PurePosixPath
 from config.s3_utils import get_s3_client_and_storage_options
 
 EXCEL_CONTENT_TYPE = (
@@ -17,9 +17,13 @@ EXCEL_CONTENT_TYPE = (
 
 def create_workbook() -> Workbook:
     """Create a new workbook and remove its default worksheet."""
+    logging.info('Creating new workbook...')
+
     workbook = Workbook()
     default_sheet = workbook.active
     workbook.remove(default_sheet)
+
+    logging.info('New workbook created.')
 
     return workbook
 
@@ -31,6 +35,8 @@ def create_cw_sheets(wb: Workbook, cw_end: int = 54) -> None:
     Each worksheet contains bold column headers, and the header row
     remains visible while scrolling.
     """
+
+    logging.info('Creating worksheets...')
 
     for week_num in range(1, cw_end):
         sheet_name = f'CW{week_num}'
@@ -44,6 +50,8 @@ def create_cw_sheets(wb: Workbook, cw_end: int = 54) -> None:
 
         worksheet.freeze_panes = "A2"
 
+    logging.info('Worksheets created.')
+
 def get_name_format(name: str) -> str:
     """
     Convert a name into a filename-friendly format.
@@ -51,22 +59,31 @@ def get_name_format(name: str) -> str:
     Example:
         "First Name" becomes "first_name".
     """
+
+    logging.info('Getting name format...')
+
     return name.lower().strip().replace(" ", "_").replace(".", "")
 
 
 def upload_workbook_to_s3(wb: Workbook, bucket_name: str, object_key: str) -> None:
-    """Save an openpyxl workbook in memory and upload it to S3."""
+    """Save an openpyxl workbook in memory and upload it to S3. Used for uploading the ToDo workbooks."""
+    logging.info('Uploading workbook to S3...')
     s3_client, _ = get_s3_client_and_storage_options()
+
+    logging.info('Got S3 client. Saving to memory buffer')
 
     buffer = BytesIO()
     wb.save(buffer)
+
+    logging.info('Saved to buffer. Moving memory pointer to the beginning....')
     buffer.seek(0)
+    logging.info('Pointer moved to the beginning. Uploading workbook to S3.....')
 
     s3_client.upload_fileobj(buffer, bucket_name, object_key, ExtraArgs={'ContentType': EXCEL_CONTENT_TYPE})
-
+    logging.info('Uploaded workbook to S3 successfully.')
 
 def upload_dataframe_to_s3(df: pd.DataFrame, bucket_name: str, object_key: str) -> None:
-    """Uploads the new dataframe to S3."""
+    """Uploads the new dataframe to S3. Used the upload the updated names dataframe."""
     s3_client, _ = get_s3_client_and_storage_options()
     buffer = BytesIO()
 
@@ -91,7 +108,7 @@ def get_existing_todo_files(bucket_name: str, todo_folder: str) -> set[str]:
 
     folder_prefix = todo_folder.strip('/') + '/'
     paginator =   s3_client.get_paginator('list_objects_v2')
-
+    logging.info(f'Getting all files in {todo_folder}...')
     existing_files = set()
 
     for page in paginator.paginate(Bucket=bucket_name, Prefix=folder_prefix):
@@ -105,22 +122,25 @@ def get_existing_todo_files(bucket_name: str, todo_folder: str) -> set[str]:
             filename = PurePosixPath(object_key).name
             existing_files.add(filename)
 
+    logging.info(f'Found {len(existing_files)} files in {todo_folder}.')
 
     return existing_files
 
 
 def create_todo_table(name: str, bucket_name, todo_folder: str) -> str:
     """Create and save a ToDo_workbook for the specified agent."""
+    logging.info(f'Creating ToDo workbook for {name}...')
     wb = create_workbook()
     create_cw_sheets(wb)
 
-    formated_name= get_name_format(name)
+    formated_name = get_name_format(name)
     filename = f'{formated_name}_todo.xlsx'
 
     object_key = str(PurePosixPath(todo_folder) / filename)
     upload_workbook_to_s3(wb=wb, bucket_name=bucket_name, object_key=object_key)
 
-    print(f"Uploaded s3://{bucket_name}/{object_key}")
+    logging.info(f'Uploaded s3://{bucket_name}/{object_key}')
+
     return filename
 
 
@@ -132,11 +152,12 @@ def add_user_table(
         todo_folder,
         names_file:str = 'names.xlsx'
 ) -> pd.DataFrame:
-    """Create a ToDo_workbook for each agent who does not already have one.
-
+    """
+    Create a ToDo_workbook for each agent who does not already have one.
     After creating each workbook, update the agent's todo_file value
-    and save the updated names table."""
-
+    and save the updated names table.
+    """
+    logging.info(f'Create ToDo tables....')
     required_columns = {'Name', 'todo_file'}
     missing_columns = required_columns - set(user_names_df.columns)
 
@@ -150,20 +171,19 @@ def add_user_table(
         name = row['Name']
 
         if pd.isna(name) or not str(name).strip():
-            print(f"Skipping row with index {idx} - no name")
+            logging.info(f'Skipping row with index {idx} - no name')
             continue
 
         filename = f"{get_name_format(str(name))}_todo.xlsx"
 
         if filename in existing_todo_files:
             user_names_df.at[idx, 'todo_file'] = filename
-            print(f"File {filename} already exists -> Skipping")
+            logging.info(f'File {filename} already exists -> Skipping')
             continue
 
         created_filename = create_todo_table(name=name, bucket_name=bucket_name, todo_folder=todo_folder)
         user_names_df.at[idx, 'todo_file'] = created_filename
         existing_todo_files.add(filename)
-
 
         name = get_name_format(name)
         user_names_df.at[idx, 'todo_file'] = f'{name}_todo.xlsx'
@@ -176,7 +196,7 @@ def add_user_table(
         object_key=names_key,
     )
 
-    print(f"Uploaded s3://{bucket_name}/{names_key}")
+    logging.info(f'Uploaded to  s3://{bucket_name}/{names_key} successfully!')
 
     return user_names_df
 

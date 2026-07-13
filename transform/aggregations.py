@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 
 
@@ -15,7 +17,7 @@ def get_quality_scores(df: pd.DataFrame) -> pd.DataFrame:
         (x['passing_tickets'] / x['total_tickets'] * 100).round(2)
     ).reset_index().sort_values(by='user')
 
-    print('Aggregated Quality scores!')
+    logging.info('Aggregated Quality scores!')
 
     return qs_score
 
@@ -30,7 +32,7 @@ def get_chat_counts(df: pd.DataFrame) -> pd.DataFrame:
                    .reset_index()
                    .sort_values(by='user'))
 
-    print('Aggregated Chat counts!')
+    logging.info('Aggregated Chat counts!')
 
     return chats_count
 
@@ -47,7 +49,7 @@ def get_aggregations(dfs: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
     for df_type, df in dfs.items():
         if df_type == 'phone':
             agg_dfs[df_type] = df
-            print("Phone counts added!")
+            logging.info("Phone counts added!")
             continue
         agg_df = agg_mapper[df_type](df)
         agg_dfs[df_type] = agg_df
@@ -64,7 +66,7 @@ def get_todo_aggregations(todo_dfs: dict[str, pd.DataFrame], names_df: pd.DataFr
     for file_name, df in todo_dfs.items():
         name = names_mapper.get(file_name)
         if name is None:
-            print(f'No name for {file_name} found!')
+            logging.error(f'No name for {file_name} found!')
             continue
 
         counts = df[['emails', 'to_do']].count()

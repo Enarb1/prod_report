@@ -1,9 +1,8 @@
-import pandera.errors
-
-from config.config import AWS_BUCKET_NAME, AWS_TEAM_FOLDER_PREFIX, AWS_RAW_EXPORT_FOLDER_PREFIX, AWS_TODO_FILES_FOLDER, \
-    DATABASE, AWS_WEEKLY_FOLDER
+import logging
+from config.config import (AWS_BUCKET_NAME, AWS_TEAM_FOLDER_PREFIX, AWS_RAW_EXPORT_FOLDER_PREFIX,
+                           AWS_TODO_FILES_FOLDER, DATABASE, AWS_WEEKLY_FOLDER)
 from extract.extract_s3 import extract_names_data, extract_qs_chat_phone_data, extract_todo_tables
-from load.load_to_postgres import create_db_if_not_exists, load_table_to_postgres
+from load.load_to_postgres import create_db_if_not_exists, load_table_to_postgresql
 from load.load_to_s3 import upload_dfs_to_s3
 from transform.aggregations import get_aggregations, get_todo_aggregations
 from transform.clean import clean_dfs, clean_todo_dfs
@@ -15,41 +14,43 @@ def get_prod_report():
 
     # Extract Data
     name_df = extract_names_data(AWS_BUCKET_NAME, AWS_TEAM_FOLDER_PREFIX)
-    print("Extracted names data")
+    logging.info("Extracted names data")
+
     dfs_dict = extract_qs_chat_phone_data(AWS_BUCKET_NAME, AWS_RAW_EXPORT_FOLDER_PREFIX)
-    print('Chat, Phone and Quality data extracted!')
+    logging.info('Chat, Phone and Quality data extracted!')
+
     todo_dfs = extract_todo_tables(AWS_BUCKET_NAME, AWS_TODO_FILES_FOLDER, 'CW1')
-    print("ToDo dataframes extracted")
+    logging.info('ToDo dataframes extracted')
 
     # Clean Data
     cleaned_dfs = clean_dfs(dfs_dict, name_df)
     cleaned_todo_dfs = clean_todo_dfs(todo_dfs)
-    print("Cleaned all DataFrames")
+    logging.info('Cleaned all DataFrames')
 
     # Aggregate Data
     agg_data = get_aggregations(cleaned_dfs)
     agg_todo_data = get_todo_aggregations(cleaned_todo_dfs, name_df)
     agg_data['emails_todo'] = agg_todo_data
-    print("Done with all aggregations!")
+    logging.info('Done with all aggregations!')
 
     # Validate Tables
     validated_dfs = validate_dfs_dict(dfs=agg_data)
-    print("Validated all DataFrames")
+    logging.info('Validated all DataFrames')
 
     # Merge data
     final_productivity_table = get_final_prod_df(validated_dfs)
-    print("Generated final productivity table")
+    logging.info('Generated final productivity table')
 
     # Validate Merged Data
     valid_prod_df = validate_df(df=final_productivity_table, df_type='prod_table' )
-    print("Validated final productivity table")
+    logging.info('Validated final productivity table')
 
     # Load Data
     create_db_if_not_exists(DATABASE)
-    load_table_to_postgres(df=valid_prod_df, table_name='CW1_prod_table')
+    load_table_to_postgresql(df=valid_prod_df, table_name='CW1_prod_table')
     validated_dfs['prod_table'] = valid_prod_df
     upload_dfs_to_s3(dfs=validated_dfs, bucket=AWS_BUCKET_NAME, folder=AWS_WEEKLY_FOLDER, cw=1)
 
-
+    logging.info('Uploaded all tables successfully!')
 if __name__ == "__main__":
     get_prod_report()
