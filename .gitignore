@@ -13,3 +13,6 @@ ENV/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# PyCharm / IntelliJ project files
+.idea/
