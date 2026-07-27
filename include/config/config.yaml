@@ -1,0 +1,15 @@
+aws:
+  conn_id: aws_conn_id
+  bucket: team-data-mock
+  folders:
+    raw_data: raw-data/
+    extracted_data: extracted-files-data/
+    names: team-files/
+    todo_data: todo-files/
+
+snowflake:
+  conn_id: my_snowflake_conn
+  database: TEAM_MOCK
+  targets:
+
+

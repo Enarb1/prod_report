@@ -1,87 +1,45 @@
-# Productivity Reporting ETL Pipeline
+Overview
+========
 
-## Overview
+Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
 
-This project is a small end-to-end ETL pipeline created as part of an ETL and data warehousing course.
+Project Contents
+================
 
-It is inspired by a recurring weekly task from my work as a Level 1 Technical Support Team Lead: generating a productivity report from multiple data sources.
+Your Astro project contains the following files and folders:
 
-The project uses mock data only and does not contain real employee, customer, or company information.
+- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
+    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
+- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
+- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
+- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
+- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
+- plugins: Add custom or community plugins for your project to this file. It is empty by default.
+- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
 
-## Data Sources
+Deploy Your Project Locally
+===========================
 
-The pipeline combines:
+Start Airflow on your local machine by running 'astro dev start'.
 
-- Phone and chat exports
-- Quality reports provided by Level 2 support
-- Email and daily to-do data from agent tables
+This command will spin up five Docker containers on your machine, each for a different Airflow component:
 
-The source files are stored in AWS S3.
+- Postgres: Airflow's Metadata Database
+- Scheduler: The Airflow component responsible for monitoring and triggering tasks
+- DAG Processor: The Airflow component responsible for parsing DAGs
+- API Server: The Airflow component responsible for serving the Airflow UI and API
+- Triggerer: The Airflow component responsible for triggering deferred tasks
 
-## ETL Process
+When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
 
-The pipeline:
+Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
 
-1. Extracts data from AWS S3
-2. Cleans and validates the datasets
-3. Merges and aggregates the results
-4. Loads the final report into PostgreSQL and AWS S3
+Deploy Your Project to Astronomer
+=================================
 
-It also includes a script that creates a to-do table for each new agent added to the names table.
+If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
 
-## Project Structure
+Contact
+=======
 
-```text
-prod_report/
-├── config/          # Configuration and S3 utilities
-├── create/          # To-do table creation
-├── extract/         # Data extraction from S3
-├── transform/       # Cleaning, merging, and aggregation
-├── validations/     # Data-quality checks
-├── load/            # Loading to PostgreSQL and S3
-├── scripts/         # Pipeline execution scripts
-└── notebooks/       # Data exploration
-```
-
-## Technologies
-- Python
-- pandas
-- PostgreSQL
-- AWS S3
-- boto3
-- SQLAlchemy
-- Jupyter Notebook
-- Setup
-
-Install the dependencies:
-```text
-pip install -r requirements.txt
-```
-
-Create a .env file with your AWS and PostgreSQL configuration.
-
-Do not commit credentials or sensitive information to version control.
-
-## Run the Pipeline
-
-```text
-python scripts/get_prod_report.py
-```
-Generate missing agent to-do tables:
-
-```text
-python scripts/generate_todo_tables.py
-```
-
-## Purpose
-
-This project demonstrates:
-
-- ETL pipeline design
-- Data cleaning and validation
-- Multi-source data integration
-- AWS S3 and PostgreSQL usage
-- Automation of a recurring reporting process
-
-## Disclaimer
-This project is for educational and portfolio purposes. All data and business entities are fictional or mocked.
+The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.

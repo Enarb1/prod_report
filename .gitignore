@@ -1,18 +1,18 @@
-# Environment variables and secrets
+.git
 .env
-.env.*
-!.env.example
-
-# Python virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Python cache and compiled files
+.DS_Store
+airflow_settings.yaml
 __pycache__/
-*.py[cod]
-*$py.class
+astro
+.venv
+.astro/standalone/
+airflow-webserver.pid
+webserver_config.py
+airflow.cfg
+airflow.db
+.astro/*.local.yml
+.astro/*.local.yaml
 
-# PyCharm / IntelliJ project files
 .idea/
+notebooks/
+.astro/config.yaml.lock
