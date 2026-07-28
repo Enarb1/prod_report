@@ -22,6 +22,7 @@ CONFIG = load_config()
 
 AWS_CONFIG = CONFIG["aws"]
 RAW_DATA_FOLDERS = AWS_CONFIG["folders"]["raw_data"]
+CLEAN_DATA_FOLDERS = AWS_CONFIG["folders"]["cleaned_data"]
 
 AWS_CONN_ID = AWS_CONFIG["conn_id"]
 S3_BUCKET = AWS_CONFIG["bucket"]
@@ -34,6 +35,11 @@ S3_DISCOVERY_FOLDERS = (
     S3_EXTRACTED_DATA,
     S3_NAMES_DATA,
 )
+
+S3_CLEANED_EXTRACTED_DATA = CLEAN_DATA_FOLDERS["extracted_data"]
+S3_CLEANED_TODO_DATA = CLEAN_DATA_FOLDERS["cleaned_todo"]
+
+S3_PROCESSED_DATA_FOLDER = AWS_CONFIG["folders"]["processed_data"]
 
 S3_FILE_PATTERNS = AWS_CONFIG["file_patterns"]
 

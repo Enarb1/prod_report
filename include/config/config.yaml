@@ -8,6 +8,12 @@ aws:
       names: raw-data/team-files/
       todo_data: raw-data/todo-files/
 
+    cleaned_data:
+      extracted_data: cleaned-data/cleaned_extracted_data/
+      cleaned_todo: cleaned-data/cleaned_todo/
+
+    processed_data: processed-data/
+
   file_patterns:
     chat: vayu
     phone: statistic_user
