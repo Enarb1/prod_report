@@ -105,11 +105,16 @@ NAMES_DATA_INPUT_SCHEMA = DataFrameSchema({
 })
 
 TODO_INPUT_SCHEMA = DataFrameSchema({
-    'Emails': Column(str),
-    'ToDo': Column(str),
+    'Emails': Column(str, nullable=True),
+    'ToDo': Column(str, nullable=True),
 })
 
 
+TODO_SUMMARY_INPUT_SCHEMA = DataFrameSchema({
+    'user_file': Column(str, nullable=False),
+    'emails_count': Column(int),
+    'todos_count': Column(int),
+})
 
 
 

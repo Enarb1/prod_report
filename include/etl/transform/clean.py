@@ -104,6 +104,7 @@ def clean_phone_data(aws_conn_id: str, s3_path: str, s3_bucket: str, cleaned_dat
     df = df[useful_columns].copy()
     df.dropna(subset=useful_columns, inplace=True)
     df = _strip_string_columns(df, ['user'])
+    df = df[df['user'] != 'Summe']
     df = df.rename(columns={'accepted_calls_number': 'total_calls'})
     df['total_calls'] = df['total_calls'].astype(int)
 

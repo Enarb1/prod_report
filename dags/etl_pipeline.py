@@ -7,7 +7,8 @@ from include.config.settings import (AWS_CONN_ID, S3_BUCKET,S3_FILE_PATTERNS, \
                                      S3_PROCESSED_DATA_FOLDER)
 from include.etl.transform.clean import (clean_chat_scores, clean_phone_data, clean_qs_data, clean_names_data,
                                          clean_todo_data)
-from include.etl.transform.transform import transform_chat_data
+from include.etl.transform.transform import (transform_chat_data, transform_phone_data, transform_qs_data,
+                                             transform_todo_summary)
 
 
 CLEANERS = {
@@ -72,13 +73,38 @@ def etl_pipeline():
     @task
     def transform_data(files: dict) -> dict:
         transformed_files = {}
-        # TODO map usernames
+
         transformed_files['chat'] = transform_chat_data(
             aws_conn_id=AWS_CONN_ID,
             s3_path=files['chat'],
             bucket=S3_BUCKET,
             processed_folder=S3_PROCESSED_DATA_FOLDER,
+            names_df_path=files['names'],
         )
+
+        transformed_files['phone'] = transform_phone_data(
+            aws_conn_id=AWS_CONN_ID,
+            s3_path=files['phone'],
+            bucket=S3_BUCKET,
+            processed_folder=S3_PROCESSED_DATA_FOLDER,
+            names_df_path=files['names'],
+        )
+
+        transformed_files['quality'] = transform_qs_data(
+            aws_conn_id=AWS_CONN_ID,
+            s3_path=files['quality'],
+            bucket=S3_BUCKET,
+            processed_folder=S3_PROCESSED_DATA_FOLDER,
+        )
+
+        transformed_files['todo_summary'] = transform_todo_summary(
+            aws_conn_id=AWS_CONN_ID,
+            s3_paths=files['todo_files'],
+            bucket=S3_BUCKET,
+            processed_folder=S3_PROCESSED_DATA_FOLDER,
+            names_df_path=files['names'],
+        )
+
 
         return transformed_files
 

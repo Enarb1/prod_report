@@ -28,6 +28,11 @@ TICKET_QS_OUTPUT_SCHEMA = DataFrameSchema({
     'user': Column(str, nullable=False),
 }, strict=True)
 
+TICKET_QS_SCORE_OUTPUT_SCHEMA = DataFrameSchema({
+    'user': Column(str, nullable=False),
+    'qs_score': Column(float, nullable=False, checks=Check.in_range(0, 100)),
+})
+
 
 NAMES_DATA_OUTPUT_SCHEMA = DataFrameSchema({
     'id': Column(int, nullable=False),
@@ -40,6 +45,13 @@ NAMES_DATA_OUTPUT_SCHEMA = DataFrameSchema({
 
 
 TODO_OUTPUT_SCHEMA = DataFrameSchema({
-    'emails': Column(str),
-    'to_do': Column(str),
+    'emails': Column(str, nullable=True),
+    'to_do': Column(str, nullable=True),
+}, strict=True)
+
+
+TODO_SUMMARY_OUTPUT_SCHEMA = DataFrameSchema({
+    'user': Column(str, nullable=False),
+    'emails_count': Column(int, checks=GTE_ZERO, nullable=False),
+    'todos_count': Column(int, checks=GTE_ZERO, nullable=False),
 }, strict=True)
