@@ -124,7 +124,7 @@ def transform_qs_data(aws_conn_id, s3_path: str, bucket: str, processed_folder: 
     df, storage_options = _get_df_and_storage_options(aws_conn_id, s3_path)
 
     df = df.groupby('user', as_index=False).agg(
-        qs_score=('quality_pass', lambda status: status.eq('in ordnunng').mean() * 100),
+        qs_score=('quality_pass', lambda status: status.eq('in ordnung').mean() * 100),
     )
     df['qs_score'] = df['qs_score'].astype(float).round(2)
     logging.info("Successfully transformed qs data.")

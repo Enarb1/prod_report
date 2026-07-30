@@ -8,7 +8,7 @@ from include.validations.input_schemas import (CHAT_DATA_INPUT_SCHEMA, PHONE_DAT
 from include.validations.output_schema import (CHAT_DATA_OUTPUT_SCHEMA, PHONE_DATA_OUTPUT_SCHEMA,
                                                TICKET_QS_OUTPUT_SCHEMA, NAMES_DATA_OUTPUT_SCHEMA, TODO_OUTPUT_SCHEMA,
                                                CHAT_TRANSFORMED_OUTPUT_SCHEMA, TICKET_QS_SCORE_OUTPUT_SCHEMA,
-                                               TODO_SUMMARY_OUTPUT_SCHEMA)
+                                               TODO_SUMMARY_OUTPUT_SCHEMA, PROD_TABLE_OUTPUT_SCHEMA)
 from include.config.logger import setup_logger
 
 logging = setup_logger(__name__)
@@ -31,7 +31,8 @@ OUTPUT_SCHEMA_MAPPER = {
     'transform_chat_data': CHAT_TRANSFORMED_OUTPUT_SCHEMA,
     'transform_phone_data': PHONE_DATA_OUTPUT_SCHEMA,
     'transform_qs_data': TICKET_QS_SCORE_OUTPUT_SCHEMA,
-    'transform_todo_summary': TODO_SUMMARY_OUTPUT_SCHEMA
+    'transform_todo_summary': TODO_SUMMARY_OUTPUT_SCHEMA,
+    'productivity_table': PROD_TABLE_OUTPUT_SCHEMA
 }
 
 

@@ -29,4 +29,38 @@ aws:
 snowflake:
   conn_id: my_snowflake_conn
   database: TEAM_MOCK
+  stages:
+    cleaned_data: CLEANED_DATA_STAGE
+    processed_data: PROCESSED_DATA_STAGE
+    business_data: PROCESSED_DATA_STAGE
+  file_format: PARQUET_FORMAT
+  targets:
+    chat_scores:
+      schema: CLEANSED_LAYER
+      table: CLEAN_CHAT_SCORES
+    names_data:
+      schema: CLEANSED_LAYER
+      table: CLEAN_NAMES_DATA
+    phone_data_clean:
+      schema: CLEANSED_LAYER
+      table: CLEAN_PHONE_DATA
+    qs_data_clean:
+      schema: CLEANSED_LAYER
+      table: CLEAN_QS_DATA
+    chat_data:
+      schema: PRESENTATION_LAYER
+      table: CHAT_DATA
+    phone_data:
+      schema: PRESENTATION_LAYER
+      table: PHONE_DATA
+    qs_data:
+      schema: PRESENTATION_LAYER
+      table: QS_DATA
+    todo_summary:
+      schema: PRESENTATION_LAYER
+      table: TODO_SUMMARY
+    prod_report:
+      schema: BUSINESS_LAYER
+      table: PRODUCTIVITY_REPORT
+
 

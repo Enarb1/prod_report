@@ -55,3 +55,14 @@ TODO_SUMMARY_OUTPUT_SCHEMA = DataFrameSchema({
     'emails_count': Column(int, checks=GTE_ZERO, nullable=False),
     'todos_count': Column(int, checks=GTE_ZERO, nullable=False),
 }, strict=True)
+
+
+PROD_TABLE_OUTPUT_SCHEMA = DataFrameSchema({
+    'user': Column(str, nullable=False),
+    'emails_count': Column(int, checks=GTE_ZERO, nullable=False),
+    'todos_count': Column(int, checks=GTE_ZERO, nullable=False),
+    'total_chats': Column(int, checks=GTE_ZERO, nullable=False),
+    'total_calls': Column(int, checks=GTE_ZERO, nullable=False),
+    'total': Column(int, checks=GTE_ZERO, nullable=False),
+    'qs_score': Column(float, nullable=True, checks=Check.in_range(0, 100)),
+}, strict=True)
