@@ -1,45 +1,98 @@
-Overview
-========
+# Prod Report — Weekly Support Team Productivity & Quality Pipeline
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+An Apache Airflow (Astronomer) ELT pipeline that automates the weekly productivity and quality report for a 1st-level technical support team. It pulls raw exports from S3, cleans and transforms them, and loads the result into Snowflake so the report can be generated with a query instead of a spreadsheet.
 
-Project Contents
-================
+> **Note on data:** This repo uses **mock/synthetic data only**. The problem it solves is a real one from my day-to-day work as a Team Lead, but no real customer, agent, or company data is included, to avoid breaching any privacy policy.
 
-Your Astro project contains the following files and folders:
+## Background
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+Every Monday, as a Team Lead, I put together a productivity and quality report covering:
 
-Deploy Your Project Locally
-===========================
+- **Chats and calls** — exported from the systems the team uses
+- **Backlog tickets (to-dos)** and **emails handled** — pulled from the daily reports each agent submits
+- **Quality scores** — received from an L2 agent's quality review
 
-Start Airflow on your local machine by running 'astro dev start'.
+Doing this by hand every week was slow and error-prone, so this project automates the ingestion, cleaning, and consolidation of that data into a single, query-ready source of truth in Snowflake.
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+## What the pipeline does
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+1. **Extract** — raw files (chat exports, call exports, agent daily reports, quality reports) land in an S3 bucket.
+2. **Transform** — Airflow DAGs clean, standardize, and reshape the data (deduplication, type casting, joining agent-level metrics, calculating productivity/quality KPIs).
+3. **Load** — the cleaned data is loaded into Snowflake tables, ready to be queried or plugged into a BI tool / report template.
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+## Tech stack
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+- **Apache Airflow** (via the [Astro CLI](https://www.astronomer.io/docs/astro/cli/overview)) for orchestration
+- **Python** for extraction and transformation logic
+- **Amazon S3** as the data source
+- **Snowflake** as the data warehouse
+- **Docker** for local development, via the Astro Runtime image
+- **SQL** for in-warehouse transformations
 
-Deploy Your Project to Astronomer
-=================================
+## Project structure
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+```
+.
+├── dags/            # Airflow DAG definitions (the pipeline itself)
+├── include/          # Helper modules, SQL templates, and other supporting files used by the DAGs
+├── sql/               # SQL scripts (transformations / Snowflake table definitions)
+├── tests/dags/         # DAG-level tests
+├── Dockerfile         # Astro Runtime image used to run Airflow locally
+├── packages.txt        # OS-level packages required by the project
+├── requirements.txt    # Python dependencies
+└── .astro/             # Astro CLI project configuration
+```
 
-Contact
-=======
+## Prerequisites
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+- [Docker](https://www.docker.com/) (Desktop or Engine)
+- [Astro CLI](https://www.astronomer.io/docs/astro/cli/install-cli)
+- AWS credentials with read access to the source S3 bucket (Airflow connection)
+- Snowflake credentials with write access to the target database/schema (Airflow connection)
+
+## Getting started
+
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/Enarb1/prod_report.git
+   cd prod_report
+   ```
+
+2. Start Airflow locally with the Astro CLI:
+   ```bash
+   astro dev start
+   ```
+   This spins up the local Airflow stack (Postgres metadata DB, Scheduler, DAG Processor, API/Webserver, Triggerer).
+
+3. Open the Airflow UI at [http://localhost:8080](http://localhost:8080).
+
+4. Add the required connections in the Airflow UI (**Admin → Connections**):
+   - `aws_default` (or your chosen conn ID) — AWS credentials for the S3 source bucket
+   - `snowflake_default` (or your chosen conn ID) — Snowflake account, warehouse, database, and schema
+
+5. Trigger the DAG(s) in the `dags/` folder from the UI, or let them run on their configured schedule.
+
+6. Stop the local environment when done:
+   ```bash
+   astro dev stop
+   ```
+
+## Running tests
+
+```bash
+astro dev pytest
+```
+or, from inside the Airflow container:
+```bash
+pytest tests/dags
+```
+
+## Roadmap / ideas
+
+- Add data quality checks (e.g. Great Expectations / Airflow data quality operators) before the Snowflake load
+- Parameterize the KPI calculations so thresholds can be adjusted per team
+- Add a dashboard layer (e.g. Streamlit or a BI tool) on top of the Snowflake tables for the final report view
+
+## License
+
+No license specified — all rights reserved by the author unless stated otherwise.
